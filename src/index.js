@@ -6,7 +6,7 @@ import { messages } from "./messages.js";
 process.on("uncaughtException", (err) => console.error(messages.logs.uncaughtException, err));
 process.on("unhandledRejection", (reason, promise) => console.error(messages.logs.unhandledRejection, reason));
 
-const reminderJob = schedule.scheduleJob("*/10 * * * *", async () => {
+const reminderJob = schedule.scheduleJob("* * * * *", async () => {
   if (!sock) {
     console.error(messages.logs.reminderDisconnected);
     return;
