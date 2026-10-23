@@ -36,20 +36,10 @@ O conteúdo de `conhecimento.md`, na raiz do projeto, é enviado como contexto e
 
 ## Docker
 
-No servidor, instale o Docker e copie o projeto (sem compartilhar o arquivo `.env`). Crie o `.env` com as variáveis necessárias e construa a imagem:
+No servidor, instale o Docker e copie o projeto (sem compartilhar o arquivo `.env`). Crie o `.env` com as variáveis necessárias e inicie o bot com Docker Compose:
 
 ```sh
-docker build -t wp-bot .
+docker compose up -d --build
 ```
 
-Inicie o bot com reinício automático e um volume persistente para a sessão do WhatsApp:
-
-```sh
-docker run -d --name wp-bot --restart unless-stopped \
-  --env-file .env \
-  -e SESSION_PATH=/app/auth_info \
-  -v wp-bot-auth:/app/auth_info \
-  wp-bot
-```
-
-O bot não precisa publicar nenhuma porta: ele mantém a conexão de saída com o WhatsApp. Na primeira execução, acompanhe `docker logs -f wp-bot` e leia o QR code para autenticar. Não compartilhe esses logs enquanto o QR estiver visível. O volume `wp-bot-auth` preserva a sessão entre reinícios e atualizações do contêiner; mantenha-o ao recriar o contêiner. Para atualizar a imagem, execute novamente `docker build -t wp-bot .` e recrie o contêiner. O `.dockerignore` impede que `.env` e arquivos de autenticação sejam incluídos na imagem.
+O arquivo `compose.yaml` configura reinício automático e um volume persistente para a sessão do WhatsApp. O bot não precisa publicar nenhuma porta: ele mantém a conexão de saída com o WhatsApp. Na primeira execução, acompanhe `docker compose logs -f` e leia o QR code para autenticar. Não compartilhe esses logs enquanto o QR estiver visível. Para atualizar o bot após enviar as mudanças ao servidor, execute novamente `docker compose up -d --build`. O `.dockerignore` impede que `.env` e arquivos de autenticação sejam incluídos na imagem.

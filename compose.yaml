@@ -1,0 +1,14 @@
+services:
+  bot:
+    build: .
+    container_name: wp-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SESSION_PATH: /app/auth_info
+    volumes:
+      - whatsapp-auth:/app/auth_info
+
+volumes:
+  whatsapp-auth:
