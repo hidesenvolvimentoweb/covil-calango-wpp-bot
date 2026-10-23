@@ -5,7 +5,7 @@ export const messages = Object.freeze({
     aiError: "Ops, algo deu errado!",
   }),
   reminders: Object.freeze({
-    default: "Fala, Duelistas! YUGINHO JOTAPINHO Passando pra avisar que SÁBADO tem torneio! Lembre-se de colocar o nome na lista pra mostrar pra galera que o torneio vai bombar!",
+    default: `O Covil do Calango chegou para fortalecer seu deck! 🃏🔥\n\n 🌐 Acesse nossa loja: \n\n https://www.covildocalango.com.br/ \n\n 📸 Siga a gente no Instagram: \n\n https://www.instagram.com/covildocalango/`,
   }),
   logs: Object.freeze({
     uncaughtException: "Erro não tratado:",

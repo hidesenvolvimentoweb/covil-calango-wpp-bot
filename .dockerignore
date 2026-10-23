@@ -1,5 +1,7 @@
 .env
 .env.*
 auth_info
+auth_info_pairing
 node_modules
 .git
+npm-debug.log*

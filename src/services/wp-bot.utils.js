@@ -81,7 +81,7 @@ export const sendReminderToAllFromGroup = async (jid, sock) => {
   const mentionedJid = metadata.participants.map(p => p.id);
 
   await sendAndTrack(sock, jid, {
-    image: fs.readFileSync("./src/images/yugi-feliz.jfif"),
+    image: fs.readFileSync("./src/images/covil-calango-post.png"),
     caption: getReminderMessage(),
     contextInfo: { mentionedJid }
   });

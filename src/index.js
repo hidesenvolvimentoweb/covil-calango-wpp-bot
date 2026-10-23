@@ -6,7 +6,8 @@ import { messages } from "./messages.js";
 process.on("uncaughtException", (err) => console.error(messages.logs.uncaughtException, err));
 process.on("unhandledRejection", (reason, promise) => console.error(messages.logs.unhandledRejection, reason));
 
-const reminderJob = schedule.scheduleJob("* * * * *", async () => {
+const reminderSchedule = process.env.SCHEDULE_JOB_PERIODICITY || "0 9 * * *";
+const reminderJob = schedule.scheduleJob(reminderSchedule, async () => {
   if (!sock) {
     console.error(messages.logs.reminderDisconnected);
     return;
@@ -30,6 +31,10 @@ const reminderJob = schedule.scheduleJob("* * * * *", async () => {
     console.error(messages.logs.taskError, err);
   }
 });
+
+if (!reminderJob) {
+  throw new Error(`Agendamento inválido em SCHEDULE_JOB_PERIODICITY: "${reminderSchedule}"`);
+}
 
 let sock;
 startBot((connectedSocket) => {

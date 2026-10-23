@@ -16,6 +16,7 @@ Crie um arquivo `.env` na raiz do projeto:
 WHATSAPP_GROUPS=Grupo Teste Bot,Outro Grupo
 # Também pode usar JIDs de grupos, por exemplo 120363000000000000@g.us.
 # Compatibilidade: se WHATSAPP_GROUPS não estiver definido, usa JID_TESTE ou WHATSAPP_GROUP_NAME.
+SCHEDULE_JOB_PERIODICITY=0 9 * * *
 SESSION_PATH=./auth_info
 OPENROUTER_API_KEY=
 ```
@@ -27,7 +28,7 @@ npm ci
 npm start
 ```
 
-Defina `WHATSAPP_GROUPS` com os nomes ou JIDs dos grupos, separados por vírgulas. O bot precisa fazer parte de cada grupo. Ele escuta mensagens e envia lembretes para todos os grupos configurados a cada 10 minutos; ajuste o agendamento em `src/index.js` antes de usar em produção. A sessão é mantida em `SESSION_PATH`: guarde esse diretório entre reinícios e não compartilhe nem versione os arquivos de autenticação.
+Defina `WHATSAPP_GROUPS` com os nomes ou JIDs dos grupos, separados por vírgulas. O bot precisa fazer parte de cada grupo. Ele escuta mensagens e envia um lembrete diário para todos os grupos configurados. `SCHEDULE_JOB_PERIODICITY` usa uma expressão cron e, por padrão, `0 9 * * *` agenda a postagem para as 9h, de acordo com o fuso horário local do processo. A sessão é mantida em `SESSION_PATH`: guarde esse diretório entre reinícios e não compartilhe nem versione os arquivos de autenticação.
 
 As mensagens enviadas pelo bot ficam centralizadas em `src/messages.js`, incluindo respostas padrão e textos dos lembretes.
 
@@ -35,16 +36,20 @@ O conteúdo de `conhecimento.md`, na raiz do projeto, é enviado como contexto e
 
 ## Docker
 
-Construa e execute a imagem montando a sessão como volume persistente e fornecendo as variáveis de ambiente necessárias:
+No servidor, instale o Docker e copie o projeto (sem compartilhar o arquivo `.env`). Crie o `.env` com as variáveis necessárias e construa a imagem:
 
 ```sh
 docker build -t wp-bot .
+```
+
+Inicie o bot com reinício automático e um volume persistente para a sessão do WhatsApp:
+
+```sh
 docker run -d --name wp-bot --restart unless-stopped \
-  -e WHATSAPP_GROUPS="Grupo Teste Bot,Outro Grupo" \
+  --env-file .env \
   -e SESSION_PATH=/app/auth_info \
   -v wp-bot-auth:/app/auth_info \
-  --env-file .env \
   wp-bot
 ```
 
-Na primeira execução, consulte `docker logs -f wp-bot` e leia o QR code para autenticar a sessão. Não publique nem compartilhe os logs enquanto o QR estiver visível.
+O bot não precisa publicar nenhuma porta: ele mantém a conexão de saída com o WhatsApp. Na primeira execução, acompanhe `docker logs -f wp-bot` e leia o QR code para autenticar. Não compartilhe esses logs enquanto o QR estiver visível. O volume `wp-bot-auth` preserva a sessão entre reinícios e atualizações do contêiner; mantenha-o ao recriar o contêiner. Para atualizar a imagem, execute novamente `docker build -t wp-bot .` e recrie o contêiner. O `.dockerignore` impede que `.env` e arquivos de autenticação sejam incluídos na imagem.
