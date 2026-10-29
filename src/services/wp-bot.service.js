@@ -52,10 +52,12 @@ const onMessageUpsert = async (msgUpdate, sock, getGroupJids) => {
     return;
   }
 
-  if (isMessageReply(msg, sock)) {
-    await replyToSender(msg, sock);
-    return;
-  }
+  // Só aciona a IA quando a mensagem responde a uma mensagem enviada pelo bot.
+  // DESABILITADO, NÃO É NECESSÁRIO RESPONDER AS MENSAGENS POR ENQUANTO.
+  // if (isMessageReply(msg, sock)) {
+  //   await replyToSender(msg, sock);
+  //   return;
+  // }
 
 };
 
