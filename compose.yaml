@@ -7,6 +7,7 @@ services:
       - .env
     environment:
       SESSION_PATH: /app/auth_info
+      API_URL: ${API_URL:-http://backend:8080}
       DATABASE_URL: ${DATABASE_URL}
       PGHOST: ${PGHOST}
       PGPORT: ${PGPORT}

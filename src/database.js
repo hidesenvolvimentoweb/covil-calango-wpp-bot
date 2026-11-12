@@ -8,6 +8,8 @@ const settingNames = Object.freeze({
   openrouterApiKey: "WPP_BOT_OPENROUTER_API_KEY",
   enableAiResponses: "WPP_BOT_ENABLE_AI_RESPONSES",
   mentionAllOnReminder: "WPP_BOT_MENTION_ALL_ON_REMINDER",
+  aiInfo: "WPP_BOT_AI_INFO",
+  reminderImage: "WPP_BOT_REMINDER_IMAGE",
 });
 
 const orderLookupNames = Object.freeze({
@@ -92,6 +94,10 @@ const normalizeSettings = (rows) => {
       settingNames.mentionAllOnReminder,
       getValue(settingNames.mentionAllOnReminder),
     ),
+    // Base de conhecimento enviada como contexto à IA (antigo INFO.md).
+    aiInfo: parameters.get(settingNames.aiInfo)?.trim() ?? "",
+    // Caminho público da imagem do lembrete na API (ex.: /api/arquivos/parametros/<uuid>.png) ou URL completa.
+    reminderImage: parameters.get(settingNames.reminderImage)?.trim() ?? "",
     orderLookup: readOrderLookup(parameters, getValue),
     messages: {
       reminder: getValue(messageNames.reminder),

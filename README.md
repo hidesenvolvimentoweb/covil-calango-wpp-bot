@@ -20,6 +20,8 @@ No Docker Compose, o container do bot precisa compartilhar uma rede Docker com o
 - `PGHOST=covil-calango-api-db-1` e `PGPORT=5432`: nome do container PostgreSQL e sua porta interna. O serviço `bot` conecta-se à rede Docker externa `covil-calango-api_default`; ela deve existir na VPS antes de subir o bot. `localhost` dentro do container aponta para o próprio container.
 - `PGSSL=true` quando o servidor exigir SSL.
 
+- `API_URL`: endereço da API usado para baixar a imagem do lembrete. No Docker Compose o padrão é `http://backend:8080` (serviço da API na mesma rede); localmente, use por exemplo `http://localhost:8080`.
+
 Também é possível fornecer `DATABASE_URL` no formato `postgresql://` ou `postgres://`, que substitui as variáveis de conexão separadas.
 
 Para executar diretamente com `npm start`, configure `PGHOST`, `PGDATABASE`, `PGUSER` e `PGPASSWORD`; `PGPORT` é opcional e assume `5433`. `DATABASE_URL` também pode ser usado. Nesse caso, use o endereço do PostgreSQL acessível a partir da máquina onde o processo Node.js roda.
@@ -36,13 +38,15 @@ Cadastre os parâmetros em `tb_parametro`, usando `nome` e `descricao`. Todos s�
 | `WPP_BOT_ENABLE_AI_RESPONSES` | Habilita respostas da IA no privado e quando alguém cita uma mensagem do bot em grupo. | `true` ou `false` |
 | `WPP_BOT_MENTION_ALL_ON_REMINDER` | Marca os participantes ao enviar lembretes. | `true` ou `false` |
 | `WPP_BOT_MESSAGE_REMINDER_DEFAULT` | Texto da legenda do lembrete. | Texto desejado |
+| `WPP_BOT_AI_INFO` (opcional) | Informações de referência (persona, dados da loja, regras) enviadas como contexto à IA. Editado na tela de parâmetros do web como texto longo. Se vazio, a IA responde sem referência. | Texto em Markdown |
+| `WPP_BOT_REMINDER_IMAGE` (opcional) | Imagem do lembrete. Enviada pela tela de parâmetros do web (tipo Imagem); o valor é o caminho público gravado pela API. Se vazio ou se o download falhar, o lembrete vai só com texto. | `/api/arquivos/parametros/<uuid>.png` |
 | `WPP_BOT_ENABLE_ORDER_LOOKUP` (opcional) | Habilita a consulta de pedidos no painel externo. Se ausente, assume `false`. | `true` ou `false` |
 | `WPP_BOT_ORDER_SITE_LOGIN_URL` (obrigatório se a consulta estiver habilitada) | URL da página de login do painel externo. | `https://painel.exemplo.com/login` |
 | `WPP_BOT_ORDER_SITE_SEARCH_URL` (obrigatório se a consulta estiver habilitada) | URL de busca de pedidos. Use `{identifier}` onde o número do pedido deve entrar; sem o marcador, o bot anexa `?q=<número>`. | `https://painel.exemplo.com/pedidos?busca={identifier}` |
 | `WPP_BOT_ORDER_SITE_USERNAME` (obrigatório se a consulta estiver habilitada) | Usuário/e-mail de acesso ao painel externo. | E-mail da conta |
 | `WPP_BOT_ORDER_SITE_PASSWORD` (obrigatório se a consulta estiver habilitada) | Senha de acesso ao painel externo. | Senha da conta |
 
-O lembrete inclui a imagem `src/images/covil-calango-post.png`. A expressão `* * * * *` agenda o envio a cada minuto. O container usa o fuso `America/Sao_Paulo`.
+O lembrete inclui a imagem configurada em `WPP_BOT_REMINDER_IMAGE`, baixada da API (`API_URL`) e mantida em memória até o parâmetro mudar. A expressão `* * * * *` agenda o envio a cada minuto. O container usa o fuso `America/Sao_Paulo`.
 
 As alterações feitas no banco são recarregadas a cada 30 segundos. Se uma consulta ou validação falhar durante a recarga, o bot registra o erro e mantém as configurações carregadas anteriormente.
 
@@ -65,7 +69,7 @@ Os limites (quantidade de mensagens, expiração e janela de agrupamento) ficam 
 
 Com `WPP_BOT_ENABLE_ORDER_LOOKUP=true`, cada mensagem que o bot responderia passa primeiro por uma classificação feita pela própria IA, que decide se o texto é uma pergunta sobre um pedido (status, rastreio, prazo, envio) e extrai o número citado. O fluxo é:
 
-1. Não é pergunta sobre pedido: a IA responde normalmente, com o contexto de `INFO.md`.
+1. Não é pergunta sobre pedido: a IA responde normalmente, com o contexto de `WPP_BOT_AI_INFO`.
 2. É pergunta sobre pedido, mas veio de um grupo: o bot pede para a pessoa chamar no privado (evita expor dados de pedido no grupo).
 3. É pergunta sobre pedido sem número: o bot pede o número do pedido. Nenhuma consulta é feita.
 4. É pergunta sobre pedido com número, no privado: o bot entra no painel externo com as credenciais cadastradas, busca o pedido e responde com número, status, data e detalhes extraídos. Se nada for encontrado, avisa para conferir o número; se o painel estiver fora ou o login falhar, avisa que não conseguiu consultar.
@@ -119,4 +123,4 @@ npm ci
 npm start
 ```
 
-O conteúdo de `INFO.md` é enviado como contexto às solicitações da IA; edite esse arquivo para atualizar as informações de referência.
+O conteúdo do parâmetro `WPP_BOT_AI_INFO` é enviado como contexto às solicitações da IA; edite-o na tela de parâmetros do web para atualizar as informações de referência.

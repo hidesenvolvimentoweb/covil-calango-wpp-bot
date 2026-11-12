@@ -1,6 +1,6 @@
-import fs from "fs";
 import { normalizeMessageContent } from "@whiskeysockets/baileys";
 import { generateByPrompt } from "./ia.service.js";
+import { getReminderImage } from "./image.service.js";
 import { analyzeOrderIntent } from "./order-intent.service.js";
 import { fetchOrderStatus } from "./order-scraper.service.js";
 import { appendTurn, getHistory } from "./conversation.service.js";
@@ -158,10 +158,10 @@ export const isMessageReply = (msg) => {
  * @param {object} sock - Instância atual do socket Baileys
  */
 export const sendReminderToAllFromGroup = async (jid, sock) => {
-  const content = {
-    image: fs.readFileSync("./src/images/covil-calango-post.png"),
-    caption: getReminderMessage(),
-  };
+  const image = await getReminderImage();
+  const content = image
+    ? { image, caption: getReminderMessage() }
+    : { text: getReminderMessage() };
 
   if (getSettings().mentionAllOnReminder) {
     const metadata = await sock.groupMetadata(jid);
