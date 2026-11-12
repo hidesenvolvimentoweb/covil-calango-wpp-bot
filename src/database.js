@@ -6,6 +6,9 @@ const settingNames = Object.freeze({
   whatsappGroups: "WPP_BOT_WHATSAPP_GROUPS",
   scheduleJobPeriodicity: "WPP_BOT_SCHEDULE_JOB_PERIODICITY",
   openrouterApiKey: "WPP_BOT_OPENROUTER_API_KEY",
+  deepseekApiKey: "WPP_BOT_DEEPSEEK_API_KEY",
+  aiProvider: "WPP_BOT_AI_PROVIDER",
+  aiModel: "WPP_BOT_AI_MODEL",
   enableAiResponses: "WPP_BOT_ENABLE_AI_RESPONSES",
   mentionAllOnReminder: "WPP_BOT_MENTION_ALL_ON_REMINDER",
 });
@@ -22,6 +25,16 @@ const readBoolean = (name, value) => {
     return false;
   }
   throw new Error(`O parâmetro ${name} deve ter descricao "true" ou "false".`);
+};
+
+const aiProviders = Object.freeze(["openrouter", "deepseek"]);
+
+const readAiProvider = (value) => {
+  const provider = (value ?? "openrouter").trim().toLowerCase();
+  if (!aiProviders.includes(provider)) {
+    throw new Error(`O parâmetro ${settingNames.aiProvider} deve ser um destes valores: ${aiProviders.join(", ")}.`);
+  }
+  return provider;
 };
 
 const normalizeSettings = (rows) => {
@@ -44,7 +57,10 @@ const normalizeSettings = (rows) => {
   return {
     whatsappGroups: parameters.get(settingNames.whatsappGroups) ?? "",
     scheduleJobPeriodicity: getValue(settingNames.scheduleJobPeriodicity),
-    openrouterApiKey: getValue(settingNames.openrouterApiKey),
+    aiProvider: readAiProvider(parameters.get(settingNames.aiProvider)),
+    aiModel: parameters.get(settingNames.aiModel)?.trim() ?? "",
+    openrouterApiKey: parameters.get(settingNames.openrouterApiKey)?.trim() ?? "",
+    deepseekApiKey: parameters.get(settingNames.deepseekApiKey)?.trim() ?? "",
     enableAiResponses: readBoolean(
       settingNames.enableAiResponses,
       getValue(settingNames.enableAiResponses),
