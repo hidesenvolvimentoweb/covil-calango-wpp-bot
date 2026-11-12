@@ -2,7 +2,8 @@ import makeWASocket, { useMultiFileAuthState, fetchLatestBaileysVersion } from "
 import qrcode from "qrcode-terminal";
 import pino from "pino";
 
-import { isMessageReply, isMessageValid, replyToSender } from "./wp-bot.utils.js";
+import { getConversationKey, isMessageReply, isMessageValid, isPrivateJid, replyToSender } from "./wp-bot.utils.js";
+import { enqueueMessage } from "./inbox.service.js";
 import { getSettings } from "../settings.js";
 
 const reconnectDelayMs = 5000;
@@ -46,27 +47,29 @@ export const getBotGroupJids = async (sock) => {
   return [...new Set(groupJids)];
 };
 
-const onMessageUpsert = async (msgUpdate, sock, getGroupJids) => {
-  const msg = msgUpdate.messages?.[0];
-  if (!msg?.key?.remoteJid || !isMessageValid(msgUpdate, msg.key.remoteJid, sock)) {
-    return;
-  }
+/**
+ * Processa um evento de mensagens do Baileys. O evento pode trazer várias mensagens;
+ * cada uma válida é enfileirada na sua conversa, e o lote é respondido de uma vez
+ * quando a janela de agrupamento fecha.
+ */
+export const onMessageUpsert = async (msgUpdate, sock, getGroupJids) => {
+  for (const msg of msgUpdate.messages ?? []) {
+    if (!isMessageValid(msg, msgUpdate.type, sock)) {
+      continue;
+    }
 
-  const jid = msg.key.remoteJid;
-  const isPrivateMessage = jid.endsWith("@s.whatsapp.net") || jid.endsWith("@lid");
+    const jid = msg.key.remoteJid;
+    const enqueue = () => enqueueMessage(getConversationKey(msg), msg, (batch) => replyToSender(batch, sock));
 
-  if (isPrivateMessage) {
-    await replyToSender(msg, sock);
-    return;
-  }
+    if (isPrivateJid(jid)) {
+      enqueue();
+      continue;
+    }
 
-  const groupJids = await getGroupJids();
-  if (!groupJids.includes(jid)) {
-    return;
-  }
-
-  if (getSettings().enableAiResponses && isMessageReply(msg)) {
-    await replyToSender(msg, sock);
+    const groupJids = await getGroupJids();
+    if (groupJids.includes(jid) && getSettings().enableAiResponses && isMessageReply(msg)) {
+      enqueue();
+    }
   }
 };
 

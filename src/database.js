@@ -10,6 +10,14 @@ const settingNames = Object.freeze({
   mentionAllOnReminder: "WPP_BOT_MENTION_ALL_ON_REMINDER",
 });
 
+const orderLookupNames = Object.freeze({
+  enabled: "WPP_BOT_ENABLE_ORDER_LOOKUP",
+  loginUrl: "WPP_BOT_ORDER_SITE_LOGIN_URL",
+  searchUrl: "WPP_BOT_ORDER_SITE_SEARCH_URL",
+  username: "WPP_BOT_ORDER_SITE_USERNAME",
+  password: "WPP_BOT_ORDER_SITE_PASSWORD",
+});
+
 const messageNames = Object.freeze({
   reminder: "WPP_BOT_MESSAGE_REMINDER_DEFAULT",
 });
@@ -22,6 +30,37 @@ const readBoolean = (name, value) => {
     return false;
   }
   throw new Error(`O parâmetro ${name} deve ter descricao "true" ou "false".`);
+};
+
+const readHttpUrl = (name, value) => {
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error(`O parâmetro ${name} deve conter uma URL válida.`);
+  }
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new Error(`O parâmetro ${name} deve usar o protocolo http:// ou https://.`);
+  }
+  return value;
+};
+
+const readOrderLookup = (parameters, getValue) => {
+  const enabledValue = parameters.get(orderLookupNames.enabled);
+  const enabled = enabledValue === undefined || enabledValue === null
+    ? false
+    : readBoolean(orderLookupNames.enabled, enabledValue);
+  if (!enabled) {
+    return { enabled: false };
+  }
+
+  return {
+    enabled: true,
+    loginUrl: readHttpUrl(orderLookupNames.loginUrl, getValue(orderLookupNames.loginUrl)),
+    searchUrl: readHttpUrl(orderLookupNames.searchUrl, getValue(orderLookupNames.searchUrl)),
+    username: getValue(orderLookupNames.username),
+    password: getValue(orderLookupNames.password),
+  };
 };
 
 const normalizeSettings = (rows) => {
@@ -53,6 +92,7 @@ const normalizeSettings = (rows) => {
       settingNames.mentionAllOnReminder,
       getValue(settingNames.mentionAllOnReminder),
     ),
+    orderLookup: readOrderLookup(parameters, getValue),
     messages: {
       reminder: getValue(messageNames.reminder),
     },
