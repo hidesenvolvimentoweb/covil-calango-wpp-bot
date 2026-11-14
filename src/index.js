@@ -5,6 +5,7 @@ import { sendReminderToAllFromGroup } from "./services/wp-bot.utils.js";
 import { messages } from "./messages.js";
 import { createPool, loadSettings } from "./database.js";
 import { getSettings, setSettings } from "./settings.js";
+import { startApiServer } from "./api/server.js";
 
 dotenv.config();
 
@@ -94,12 +95,15 @@ const start = async () => {
 
   settingsReloadTimer = setInterval(() => reloadSettings(pool), 30000);
 
+  const apiServer = startApiServer(() => sock);
+
   startBot((connectedSocket) => {
     sock = connectedSocket;
   }).catch(async (error) => {
     console.error(messages.logs.botStopped, error);
     reminderJob?.cancel();
     clearInterval(settingsReloadTimer);
+    apiServer?.close();
     await pool.end();
     process.exitCode = 1;
   });

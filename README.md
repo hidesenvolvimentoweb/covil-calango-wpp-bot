@@ -105,6 +105,48 @@ WHERE nome = 'WPP_BOT_SCHEDULE_JOB_PERIODICITY';
 
 Guarde a chave OpenRouter como segredo e restrinja o acesso às configurações no banco. Não exponha o PostgreSQL à internet nem use credenciais administrativas em aplicações que só precisam atualizar `tb_parametro`.
 
+## API de envio de mensagens
+
+O bot expõe uma API REST (Express) usada pela API do Covil para avisar o cliente, pelo WhatsApp, sobre a movimentação dos pedidos. Ela só é iniciada quando `WPP_BOT_API_TOKEN` está definido.
+
+| Variável (`.env`) | Uso | Padrão |
+|---|---|---|
+| `WPP_BOT_API_TOKEN` | Token exigido no cabeçalho `Authorization: Bearer <token>`. Use um valor longo e aleatório e configure o mesmo valor na API do Covil. Sem ele a API não sobe. | — |
+| `WPP_BOT_API_PORT` | Porta HTTP da API. | `3000` |
+| `DEFAULT_COUNTRY_CODE` | DDI adicionado a números informados só com DDD + número (10 ou 11 dígitos). | `55` |
+
+No Docker Compose a porta não é publicada no host: a API fica acessível apenas na rede `covil-calango-api_default`, em `http://wp-bot:3000`.
+
+### `POST /api/v1/messages`
+
+Envia uma mensagem de texto para um número. Requer o token.
+
+```http
+POST /api/v1/messages
+Authorization: Bearer <WPP_BOT_API_TOKEN>
+Content-Type: application/json
+
+{ "phone": "(83) 99999-9999", "message": "Seu pedido está pronto! 😋" }
+```
+
+`phone` aceita máscara; com 10 ou 11 dígitos recebe o DDI padrão. `message` é obrigatória e tem no máximo 4096 caracteres.
+
+| Status | Quando |
+|---|---|
+| `201 Created` | Mensagem enviada. Corpo: `{ id, phone, to, status: "SENT", sentAt }`. |
+| `400 Bad Request` | Corpo inválido, número inválido ou mensagem ausente/longa demais. |
+| `401 Unauthorized` | Token ausente ou inválido. |
+| `404 Not Found` | O número não possui WhatsApp. |
+| `503 Service Unavailable` | O WhatsApp do bot está desconectado. |
+
+Erros seguem o formato `{ timestamp, status, error, message, path }`.
+
+### `GET /api/v1/health`
+
+Público. Responde `200` com `{ status: "UP", whatsapp: "CONNECTED" }` quando o WhatsApp está conectado, e `503` com `DOWN`/`DISCONNECTED` caso contrário.
+
+O código fica em `src/api/` (rotas, controllers, validadores e middlewares) e o envio em `src/services/messaging.service.js`.
+
 ## Executar com Docker Compose
 
 ```sh

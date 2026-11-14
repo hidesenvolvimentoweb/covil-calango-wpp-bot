@@ -15,6 +15,12 @@ services:
       PGUSER: ${PGUSER}
       PGPASSWORD: ${PGPASSWORD}
       PGSSL: ${PGSSL}
+      # API HTTP do bot (envio de mensagens). Acessível apenas pela rede Docker: a API Java usa http://wp-bot:3000.
+      WPP_BOT_API_PORT: ${WPP_BOT_API_PORT:-3000}
+      WPP_BOT_API_TOKEN: ${WPP_BOT_API_TOKEN:-}
+      DEFAULT_COUNTRY_CODE: ${DEFAULT_COUNTRY_CODE:-55}
+    expose:
+      - "${WPP_BOT_API_PORT:-3000}"
     volumes:
       - whatsapp-auth:/app/auth_info
     networks:
