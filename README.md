@@ -26,13 +26,16 @@ Para executar diretamente com `npm start`, configure `PGHOST`, `PGDATABASE`, `PG
 
 ## Parâmetros do bot
 
-Cadastre os parâmetros em `tb_parametro`, usando `nome` e `descricao`. Todos são obrigatórios, exceto `WPP_BOT_WHATSAPP_GROUPS`; se outro parâmetro estiver ausente ou uma flag não for `true`/`false`, o bot não inicia. Quando `WPP_BOT_WHATSAPP_GROUPS` estiver ausente ou vazio, o bot usa todos os grupos da conta.
+Cadastre os parâmetros em `tb_parametro`, usando `nome` e `descricao`. Todos são obrigatórios, exceto os marcados como opcionais; se outro parâmetro estiver ausente ou uma flag não for `true`/`false`, o bot não inicia. Quando `WPP_BOT_WHATSAPP_GROUPS` estiver ausente ou vazio, o bot usa todos os grupos da conta.
 
 | `nome` | Uso | Exemplo de `descricao` |
 |---|---|---|
 | `WPP_BOT_WHATSAPP_GROUPS` (opcional) | Grupos separados por vírgula: nomes ou JIDs. Se ausente ou vazio, seleciona todos os grupos da conta. | `120363411812937621@g.us` |
 | `WPP_BOT_SCHEDULE_JOB_PERIODICITY` | Expressão cron para envio de lembretes. | `0 9 * * *` |
-| `WPP_BOT_OPENROUTER_API_KEY` | Chave para respostas da IA. | Chave fornecida pelo OpenRouter |
+| `WPP_BOT_AI_PROVIDER` (opcional) | Provedor da IA. Se ausente, usa `openrouter`. | `openrouter` ou `deepseek` |
+| `WPP_BOT_AI_MODEL` (opcional) | Modelo da IA. Se ausente, usa `recursive/flint-v1.0:free` (OpenRouter) ou `deepseek-chat` (DeepSeek). | `deepseek-chat` |
+| `WPP_BOT_OPENROUTER_API_KEY` (opcional) | Chave do OpenRouter. Necessária quando o provedor é `openrouter`. | Chave fornecida pelo OpenRouter |
+| `WPP_BOT_DEEPSEEK_API_KEY` (opcional) | Chave do DeepSeek. Necessária quando o provedor é `deepseek`. | Chave criada em platform.deepseek.com |
 | `WPP_BOT_ENABLE_AI_RESPONSES` | Habilita respostas da IA no privado e quando alguém cita uma mensagem do bot em grupo. | `true` ou `false` |
 | `WPP_BOT_MENTION_ALL_ON_REMINDER` | Marca os participantes ao enviar lembretes. | `true` ou `false` |
 | `WPP_BOT_MESSAGE_REMINDER_DEFAULT` | Texto da legenda do lembrete. | Texto desejado |
@@ -60,7 +63,7 @@ SET descricao = '* * * * *'
 WHERE nome = 'WPP_BOT_SCHEDULE_JOB_PERIODICITY';
 ```
 
-Guarde a chave OpenRouter como segredo e restrinja o acesso às configurações no banco. Não exponha o PostgreSQL à internet nem use credenciais administrativas em aplicações que só precisam atualizar `tb_parametro`.
+Guarde as chaves do OpenRouter e do DeepSeek como segredo e restrinja o acesso às configurações no banco. Não exponha o PostgreSQL à internet nem use credenciais administrativas em aplicações que só precisam atualizar `tb_parametro`.
 
 ## Executar com Docker Compose
 
